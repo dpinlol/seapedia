@@ -1,0 +1,243 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  roles     String
+  activeRole String?
+
+  store          Store?
+  buyerProfile   BuyerProfile?
+  driverProfile  DriverProfile?
+  reviews        ApplicationReview[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Store {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  sellerId  String   @unique
+  seller    User     @relation(fields: [sellerId], references: [id])
+
+  products Product[]
+  orders   Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  stock       Int
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BuyerProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  walletBalance Float    @default(0)
+
+  addresses         Address[]
+  walletTransactions WalletTransaction[]
+  cart              Cart?
+  orders            Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DriverProfile {
+  id      String @id @default(cuid())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id])
+
+  deliveryJobs DeliveryJob[]
+  orders       Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  buyerId   String
+  buyer     BuyerProfile @relation(fields: [buyerId], references: [id])
+  label     String
+  address   String
+  city      String
+  phone     String
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  buyerId   String   @unique
+  buyer     BuyerProfile @relation(fields: [buyerId], references: [id])
+  storeId   String
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  cart      Cart   @relation(fields: [cartId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  buyerId         String
+  buyer           BuyerProfile  @relation(fields: [buyerId], references: [id])
+  sellerId        String
+  storeId         String
+  store           Store         @relation(fields: [storeId], references: [id])
+  driverId        String?
+  driver          DriverProfile? @relation(fields: [driverId], references: [id])
+  deliveryJob     DeliveryJob?
+
+  subtotal        Float
+  discountAmount  Float         @default(0)
+  deliveryFee     Float
+  ppn             Float
+  finalTotal      Float
+  deliveryMethod  String
+  status          String        @default("SEDANG_DIKEMAS")
+  voucherId       String?
+  voucher         Voucher?      @relation(fields: [voucherId], references: [id])
+  promoId         String?
+  promo           Promo?        @relation(fields: [promoId], references: [id])
+
+  items        OrderItem[]
+  statusHistory OrderStatusHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id          String @id @default(cuid())
+  orderId     String
+  order       Order  @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  productName String
+  price       Float
+  quantity    Int
+
+  createdAt DateTime @default(now())
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  status    String
+  note      String?
+  timestamp DateTime @default(now())
+
+  createdAt DateTime @default(now())
+}
+
+model DeliveryJob {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  driverId  String?
+  driver    DriverProfile? @relation(fields: [driverId], references: [id])
+  status    String   @default("AVAILABLE")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Voucher {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  discountType   String
+  discountValue  Float
+  expiryDate     DateTime
+  maxUsage       Int
+  currentUsage   Int      @default(0)
+  minPurchase    Float    @default(0)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Promo {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  discountType  String
+  discountValue Float
+  expiryDate    DateTime
+  minPurchase   Float    @default(0)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  buyerId     String
+  buyer       BuyerProfile @relation(fields: [buyerId], references: [id])
+  amount      Float
+  type        String
+  description String
+
+  createdAt DateTime @default(now())
+}
+
+model ApplicationReview {
+  id           String   @id @default(cuid())
+  reviewerName String
+  rating       Int
+  comment      String
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model SystemConfig {
+  id    String @id @default("default")
+  key   String @unique
+  value String
+}
