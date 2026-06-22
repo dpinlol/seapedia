@@ -40,7 +40,8 @@ export const updateStore = async (
   next: NextFunction
 ) => {
   try {
-    const data = storeSchema.parse(req.body);
+    const raw = storeSchema.parse(req.body);
+    const data = sanitizeObject(raw, ["name"]);
     const store = await prisma.store.findUnique({ where: { sellerId: req.user!.userId } });
     if (!store) throw new NotFoundError("Store");
 

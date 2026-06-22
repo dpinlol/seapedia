@@ -3,12 +3,13 @@ import { z } from "zod";
 import { prisma } from "../config/db";
 import { AuthRequest } from "../types";
 import { NotFoundError } from "../utils/errors";
+import { sanitizeObject } from "../utils/sanitize";
 
 const addressSchema = z.object({
   label: z.string().min(1),
   address: z.string().min(1),
   city: z.string().min(1),
-  phone: z.string().min(1),
+  phone: z.string().regex(/^\+?[0-9]{10,15}$/, "Invalid phone number"),
   isDefault: z.boolean().optional(),
 });
 
@@ -39,7 +40,8 @@ export const createAddress = async (
   next: NextFunction
 ) => {
   try {
-    const data = addressSchema.parse(req.body);
+    const raw = addressSchema.parse(req.body);
+    const data = sanitizeObject(raw, ["label", "address", "city", "phone"]);
     const profile = await prisma.buyerProfile.findUnique({
       where: { userId: req.user!.userId },
     });
@@ -67,7 +69,8 @@ export const updateAddress = async (
   next: NextFunction
 ) => {
   try {
-    const data = addressSchema.partial().parse(req.body);
+    const raw = addressSchema.partial().parse(req.body);
+    const data = sanitizeObject(raw, ["label", "address", "city", "phone"]);
     const profile = await prisma.buyerProfile.findUnique({
       where: { userId: req.user!.userId },
     });

@@ -33,6 +33,11 @@ export const getJobDetail = async (
   next: NextFunction
 ) => {
   try {
+    const profile = await prisma.driverProfile.findUnique({
+      where: { userId: req.user!.userId },
+    });
+    if (!profile) throw new NotFoundError("Driver profile");
+
     const job = await prisma.deliveryJob.findUnique({
       where: { id: String(req.params.id) },
       include: {
@@ -46,6 +51,9 @@ export const getJobDetail = async (
       },
     });
     if (!job) throw new NotFoundError("Delivery job");
+    if (job.driverId && job.driverId !== profile.id && job.status !== "AVAILABLE") {
+      throw new NotFoundError("Delivery job");
+    }
     res.json({ job });
   } catch (err) {
     next(err);
