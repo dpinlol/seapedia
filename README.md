@@ -4,6 +4,20 @@ Fullstack multi-role marketplace — COMPFEST 18 Software Engineering Academy.
 
 A marketplace platform where users can buy, sell, and deliver products with role-based dashboards, wallet payments, voucher/promo discounts, PPN 12% tax, delivery SLA enforcement, and admin monitoring.
 
+**Repository**: [github.com/dpinlol/seapedia](https://github.com/dpinlol/seapedia) (public)
+
+## Checklist
+
+| Requirement | Status |
+|-------------|--------|
+| **Works on Any Machine** | ✅ Node.js 18+ only. SQLite file DB — no external database server needed. |
+| **Repository Hosting** | ✅ Public on GitHub — [github.com/dpinlol/seapedia](https://github.com/dpinlol/seapedia) |
+| **README** | ✅ This file — env vars, admin setup, setup steps, API docs, security, deployment |
+| **API Documentation** | ✅ Swagger/OpenAPI 3.0 at `localhost:3001/api-docs` with annotated schemas for all 11 route groups |
+| **Security Notes** | ✅ See [Security Measures](#security-measures) section below |
+| **Git Commit History** | ✅ 10 step-by-step commits showing backend → auth → APIs → frontend → docs → security progression |
+| **Deployment Link** | — Not deployed. See [Deployment](#deployment) for build and hosting instructions. |
+
 ## Tech Stack
 
 | Layer | Tech |
@@ -23,7 +37,7 @@ A marketplace platform where users can buy, sell, and deliver products with role
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/dpinlol/seapedia.git
 cd seapedia
 ```
 
@@ -220,7 +234,24 @@ Visitor
           └── ADMIN ── /dashboard → /vouchers → /promos → /overdue
 ```
 
-## Security Measures
+## Git History
+
+The project was built incrementally with 10 commits showing the full development progression:
+
+```
+3882f96 feat: initial backend setup with Prisma schema, migrations, and seed data
+374b0fc feat: backend core — Express app, auth middleware, error handling, swagger config
+ee7266f feat: auth — register, login, logout, switch-role, profile with JWT
+16c2356 feat: product, store, review, wallet, address, cart APIs
+ef4b54d feat: order, delivery, discount, admin APIs with full checkout flow
+50ec619 feat: frontend setup — React, Vite, Tailwind, routing, auth store, API client
+94f50a0 docs: README with setup, env vars, API docs, security; add .gitignore
+18f2295 chore: add tsbuildinfo to gitignore
+c20b6bf fix: security hardening — XSS sanitize for address/store, phone validation, delivery RBAC
+dc47cbf docs: fix seed script name in README, add favicon
+```
+
+## Security Measures <a name="security-measures"></a>
 
 - **SQL Injection**: prevented by Prisma ORM parameterized queries (no raw SQL anywhere in the codebase)
 - **XSS**: React JSX auto-escapes user content; backend sanitizes user text input (review comments, product names/descriptions, store names) via `sanitize.ts` using a whitelist approach
