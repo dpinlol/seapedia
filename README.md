@@ -16,7 +16,7 @@ A marketplace platform where users can buy, sell, and deliver products with role
 | **API Documentation** | ✅ Swagger/OpenAPI 3.0 at `localhost:3001/api-docs` with annotated schemas for all 11 route groups |
 | **Security Notes** | ✅ See [Security Measures](#security-measures) section below |
 | **Git Commit History** | ✅ 10 step-by-step commits showing backend → auth → APIs → frontend → docs → security progression |
-| **Deployment Link** | — Not deployed. See [Deployment](#deployment) for build and hosting instructions. |
+| **Deployment Link** | — Not deployed. Follow [Deployment](#deployment) for Railway + Vercel setup. |
 
 ## Tech Stack
 
@@ -301,25 +301,50 @@ seapedia/
 
 ## Deployment
 
-### Building for production
+### Option 1: Railway (backend) + Vercel (frontend) — recommended
 
-```bash
-# Backend
-cd backend
-npm run build          # compiles to dist/
-npm start              # runs dist/index.js
+#### Backend → Railway
 
-# Frontend
-cd frontend
-npm run build          # outputs to dist/
-# Serve dist/ with any static file server (nginx, etc.)
-```
+1. Push the repo to GitHub (already done)
+2. Create a [Railway](https://railway.app) account → **New Project** → **Deploy from GitHub repo** → select `seapedia`
+3. Set the **Root Directory** to `backend`
+4. Add a **PostgreSQL** database plugin — Railway gives you a `DATABASE_URL` connection string
+5. Go to **Variables** and set:
+   - `DATABASE_URL` — from the PostgreSQL plugin (starts with `postgresql://`)
+   - `JWT_SECRET` — a strong random string
+   - `JWT_EXPIRES_IN=24h`
+   - `PORT=3001`
+6. Open `backend/prisma/schema.prisma` and change `provider = "sqlite"` to `provider = "postgresql"`
+7. Regenerate the Prisma client: `npx prisma generate`
+8. In Railway, set **Start Command** to:
 
-### Deploying to a cloud platform
+   ```bash
+   npx prisma migrate deploy && npx prisma db seed && node dist/index.js
+   ```
 
-1. Set the backend `JWT_SECRET` to a strong random value
-2. Update `vite.config.ts` proxy target (or serve built frontend assets from the same origin)
-3. Ensure the SQLite database file (`backend/prisma/dev.db`) is writable, or switch to PostgreSQL
-4. Run migrations and seed on deploy
+9. Railway deploys and gives you a `*.railway.app` URL (save this)
 
-> **Note:** SQLite is not recommended for production with concurrent writes. For production, switch to PostgreSQL by changing `provider` in `schema.prisma` from `"sqlite"` to `"postgresql"` and updating `DATABASE_URL`.
+> **Note:** SQLite is not suitable for production with concurrent writes. The PostgreSQL switch is required for Railway.
+
+#### Frontend → Vercel
+
+1. Go to [Vercel](https://vercel.com) → **Add New Project** → Import `seapedia`
+2. Set **Root Directory** to `frontend`
+3. **Framework Preset**: Vite
+4. **Build Command**: `npm run build`
+5. **Output Directory**: `dist`
+6. Add environment variable:
+   - `VITE_API_URL=https://your-backend.railway.app/api`
+7. Deploy
+
+The frontend reads `VITE_API_URL` at build time. In dev it falls back to `/api` (Vite proxy).
+
+### Option 2: Single VPS (keeps SQLite)
+
+1. Get a $6/month VPS (DigitalOcean, Linode)
+2. Install Node.js 18+
+3. Clone repo, build and run backend on port 3001
+4. Build frontend, serve with nginx reverse proxy to backend
+5. Point your domain to the VPS IP
+
+This is simpler if you want to keep SQLite and avoid the PostgreSQL migration.
