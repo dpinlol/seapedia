@@ -33,7 +33,7 @@ cd seapedia
 cd backend
 npm install
 npx prisma migrate dev
-npm run seed
+npm run db:seed
 npm run dev
 # → http://localhost:3001
 ```
@@ -93,7 +93,7 @@ Admin accounts cannot be created via the public registration form (which only al
 1. Register a user via the UI
 2. Open the database: `cd backend && npx prisma studio`
 3. Find the user and change `roles` from `["BUYER"]` to `["ADMIN"]`
-4. Alternatively, modify the seed file (`prisma/seed.ts`) and run `npm run seed`
+4. Alternatively, modify the seed file (`prisma/seed.ts`) and run `npm run db:seed`
 
 ## Demo Flow
 
