@@ -6,23 +6,26 @@ A marketplace platform where users can buy, sell, and deliver products with role
 
 **Repository**: [github.com/dpinlol/seapedia](https://github.com/dpinlol/seapedia) (public)
 
+**Live Demo**: [seapedia-seven.vercel.app](https://seapedia-seven.vercel.app)
+**API Docs (live)**: [seapedia-production-269b.up.railway.app/api-docs](https://seapedia-production-269b.up.railway.app/api-docs)
+
 ## Checklist
 
 | Requirement | Status |
 |-------------|--------|
-| **Works on Any Machine** | ✅ Node.js 18+ only. SQLite file DB — no external database server needed. |
+| **Works on Any Machine** | ✅ Node.js 18+ only. PostgreSQL for production, SQLite for local dev. |
 | **Repository Hosting** | ✅ Public on GitHub — [github.com/dpinlol/seapedia](https://github.com/dpinlol/seapedia) |
 | **README** | ✅ This file — env vars, admin setup, setup steps, API docs, security, deployment |
 | **API Documentation** | ✅ Swagger/OpenAPI 3.0 at `localhost:3001/api-docs` with annotated schemas for all 11 route groups |
 | **Security Notes** | ✅ See [Security Measures](#security-measures) section below |
 | **Git Commit History** | ✅ 10 step-by-step commits showing backend → auth → APIs → frontend → docs → security progression |
-| **Deployment Link** | — Not deployed. Follow [Deployment](#deployment) for Railway + Vercel setup. |
+| **Deployment Link** | ✅ [seapedia-seven.vercel.app](https://seapedia-seven.vercel.app) — Railway (backend) + Vercel (frontend) |
 
 ## Tech Stack
 
 | Layer | Tech |
 |-------|------|
-| Backend | Node.js, Express, TypeScript, Prisma ORM, SQLite |
+| Backend | Node.js, Express, TypeScript, Prisma ORM, PostgreSQL / SQLite |
 | Frontend | React, Vite, TypeScript, Tailwind CSS v4 |
 | Auth | JWT (24h expiry), bcrypt, role-based access control, logout blacklist |
 | API Docs | Swagger/OpenAPI (via swagger-jsdoc + swagger-ui-express) |
@@ -43,10 +46,12 @@ cd seapedia
 
 ### 2. Backend setup
 
+> **Note:** The schema defaults to PostgreSQL. For local dev without PostgreSQL, change the provider in `prisma/schema.prisma` from `"postgresql"` back to `"sqlite"` and set `DATABASE_URL="file:./dev.db"` in `.env`.
+
 ```bash
 cd backend
 npm install
-npx prisma migrate dev
+npx prisma db push
 npm run db:seed
 npm run dev
 # → http://localhost:3001
@@ -104,10 +109,12 @@ Seed data includes:
 
 Admin accounts cannot be created via the public registration form (which only allows BUYER, SELLER, DRIVER roles). To create an admin:
 
+**Local dev:**
 1. Register a user via the UI
 2. Open the database: `cd backend && npx prisma studio`
 3. Find the user and change `roles` from `["BUYER"]` to `["ADMIN"]`
-4. Alternatively, modify the seed file (`prisma/seed.ts`) and run `npm run db:seed`
+
+**Production (Railway):** Create a new migration or seed script that grants ADMIN role, or use `prisma db seed -- --admin <user-id>` after adding a custom seed script.
 
 ## Demo Flow
 
@@ -129,7 +136,9 @@ Users with multiple roles (e.g. `seller` has SELLER + BUYER) select an active ro
 
 ## API Documentation
 
-Swagger/OpenAPI is available at **http://localhost:3001/api-docs** after starting the backend.
+Swagger/OpenAPI is available at:
+- **Local dev**: `http://localhost:3001/api-docs`
+- **Live (production)**: [seapedia-production-269b.up.railway.app/api-docs](https://seapedia-production-269b.up.railway.app/api-docs)
 
 | Route Group | Methods | Auth | Description |
 |-------------|---------|------|-------------|
